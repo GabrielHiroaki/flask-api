@@ -25,10 +25,6 @@ FIREBASE_CRED_PATH = {
     # Adicione outros campos se necessário
 }
 
-# Usa o dicionário para inicializar o Firebase
-cred = credentials.Certificate(FIREBASE_CRED_PATH)
-firebase_admin.initialize_app(cred)
-
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:
     raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
@@ -36,6 +32,11 @@ if ESP_IP_ADDRESS is None:
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
 CORS(app)
+
+# Inicializar Firebase
+cred = credentials.Certificate(FIREBASE_CRED_PATH)
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 # Função para remover códigos ANSI
 def strip_ansi_codes(s):

@@ -11,7 +11,7 @@ import os
 import json
 
 # Constantes
-firebase_config = {
+FIREBASE_CRED_PATH = {
     "type": os.environ.get("type"),
     "project_id": os.environ.get("project_id"),
     "private_key_id": os.environ.get("private_key_id"),
@@ -26,7 +26,7 @@ firebase_config = {
 }
 
 # Usa o dicionário para inicializar o Firebase
-cred = credentials.Certificate(firebase_config)
+cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  

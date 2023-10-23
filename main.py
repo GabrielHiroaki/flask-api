@@ -8,11 +8,22 @@ import re
 import sys
 from functools import wraps
 import os
+import json
 
 # Constantes
-FIREBASE_CRED_PATH = os.getenv('FIREBASE_CRED_PATH')
-if FIREBASE_CRED_PATH is None:
-    raise ValueError("No Firebase credentials path set. Please set the FIREBASE_CRED_PATH environment variable.")
+# Pega a string JSON das variáveis de ambiente
+firebase_credentials_string = os.getenv('FIREBASE_CRED_PATH')
+
+# Verifica se a string está definida
+if firebase_credentials_string is None:
+    raise ValueError("No Firebase credentials set. Please set the FIREBASE_CRED_PATH environment variable.")
+
+# Converte a string JSON em um dicionário Python
+cred_dict = json.loads(firebase_credentials_string)
+
+# Usa o dicionário para inicializar o Firebase
+cred = credentials.Certificate(cred_dict)
+firebase_admin.initialize_app(cred)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:

@@ -33,11 +33,6 @@ if ESP_IP_ADDRESS is None:
 app = Flask(__name__)
 CORS(app)
 
-# Inicializar Firebase
-cred = credentials.Certificate(FIREBASE_CRED_PATH)
-firebase_admin.initialize_app(cred)
-db = firestore.client()
-
 # Função para remover códigos ANSI
 def strip_ansi_codes(s):
     return re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', s)

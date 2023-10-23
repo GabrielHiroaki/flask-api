@@ -5,10 +5,4 @@ itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
 Werkzeug==1.0.1
-firebase_core==2.15.0
-firebase_auth==4.9.0
-cloud_firestore==4.9.1
-http==0.13.6
-google_fonts==4.0.0
-android_alarm_manager_plus==3.0.3
-shared_preferences==2.2.2
+firebase_admin==0.2.0

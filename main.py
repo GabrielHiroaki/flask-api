@@ -11,18 +11,22 @@ import os
 import json
 
 # Constantes
-# Pega a string JSON das variáveis de ambiente
-firebase_credentials_string = os.getenv('FIREBASE_CRED_PATH')
-
-# Verifica se a string está definida
-if firebase_credentials_string is None:
-    raise ValueError("No Firebase credentials set. Please set the FIREBASE_CRED_PATH environment variable.")
-
-# Converte a string JSON em um dicionário Python
-cred_dict = json.loads(firebase_credentials_string)
+firebase_config = {
+    "type": os.environ.get("type"),
+    "project_id": os.environ.get("project_id"),
+    "private_key_id": os.environ.get("private_key_id"),
+    "private_key": os.environ.get("private_key").replace('\\n', '\n'),  # Para tratar quebras de linha na chave privada
+    "client_email": os.environ.get("client_email"),
+    "client_id": os.environ.get("client_id"),
+    "auth_uri": os.environ.get("auth_uri"),
+    "token_uri": os.environ.get("token_uri"),
+    "auth_provider_x509_cert_url": os.environ.get("auth_provider_x509_cert_url"),
+    "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
+    # Adicione outros campos se necessário
+}
 
 # Usa o dicionário para inicializar o Firebase
-cred = credentials.Certificate(cred_dict)
+cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  

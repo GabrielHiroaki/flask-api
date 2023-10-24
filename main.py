@@ -71,7 +71,7 @@ def health_check():
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
     try:
-        response = requests.get(f'http://{ESP_IP_ADDRESS}/sensor')
+        response = requests.get(f'httpsss://{ESP_IP_ADDRESS}/sensor')
         if response.status_code == 200:
             return jsonify(response.json()), 200
         else:
@@ -118,12 +118,12 @@ def control_airconditioner(command):
     """Endpoint para controlar o ar-condicionado via ESP32."""
     try:
         if command == "on":
-            response = requests.get(f"http://{ESP_IP_ADDRESS}/ligar")
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
         elif command == "off":
-            response = requests.get(f"http://{ESP_IP_ADDRESS}/desligar")
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
         elif "set_temperatura_" in command:
             temperatura = command.replace("set_temperatura_", "")
-            response = requests.get(f"http://{ESP_IP_ADDRESS}/temperatura/{temperatura}")
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/temperatura/{temperatura}")
         else:
             return jsonify({"error": "Command not recognized"}), 400
 
@@ -136,7 +136,7 @@ def control_airconditioner(command):
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500
 
-#curl -X POST -d "comando=ligar" https://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/luz/ligar
+#curl -X POST -d "comando=ligar" httpss://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/luz/ligar
 @app.route('/dispositivo/luz/ligar', methods=['POST'])
 def ligar_luz():
     comando = request.form.get('comando')  # Extrair o comando do formulário
@@ -145,7 +145,7 @@ def ligar_luz():
 
     if comando == 'ligar':
         # Enviar um comando para o Arduino para ligar a luz
-        arduino_url = f'http://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'ligar'})  # Usar data para enviar formulário
@@ -166,7 +166,7 @@ def desligar_luz():
 
     if comando == 'desligar':
         # Enviar um comando para o Arduino para desligar a luz
-        arduino_url = f'http://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'desligar'})  # Usar data para enviar formulário
@@ -178,7 +178,7 @@ def desligar_luz():
     else:
         return jsonify({'mensagem': 'Comando não especificado', 'status': 400}), 400
 
-#curl -X POST -d "comando=ligar" https://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/tomada/ligar
+#curl -X POST -d "comando=ligar" httpsss://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/tomada/ligar
 @app.route('/dispositivo/tomada/ligar', methods=['POST'])
 def ligar_tomada():
     comando = request.form.get('comando')  # Extrair o comando do formulário
@@ -187,7 +187,7 @@ def ligar_tomada():
 
     if comando == 'ligar':
         # Enviar um comando para o Arduino para ligar a tomada
-        arduino_url = f'http://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'httpss://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'ligar'})  # Usar data para enviar formulário
@@ -207,7 +207,7 @@ def desligar_tomada():
 
     if comando == 'desligar':
         # Enviar um comando para o Arduino para desligar a tomada
-        arduino_url = f'http://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'httpss://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'desligar'})  # Usar data para enviar formulário

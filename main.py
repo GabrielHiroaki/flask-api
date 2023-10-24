@@ -136,89 +136,42 @@ def control_airconditioner(command):
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500
 
-#curl -X POST -d "comando=ligar" httpss://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/luz/ligar
-@app.route('/dispositivo/luz/ligar', methods=['POST'])
-def ligar_luz():
-    comando = request.form.get('comando')  # Extrair o comando do formulário
+@app.route('/dispositivo/tv/energia', methods=['POST'])
+def energia_tv():
+    response = requests.post(f'{URL}/tv/energia')
+    return jsonify({"status": response.status_code, "mensagem": response.text})
+
+@app.route('/dispositivo/tv/volume/<string:acao>', methods=['POST'])
+def controlar_volume(acao):
+    if acao not in ["mais", "menos"]:
+        return jsonify({"error": "Ação inválida"}), 400
+
+    endpoint = f"/tv/volume/{acao}"
+    response = requests.post(f'https://{ESP_IP_ADDRESS}{endpoint}')
     
-    app.logger.info(f"Comando recebido: {comando}")
+    return jsonify({"status": response.status_code, "mensagem": response.text})
 
-    if comando == 'ligar':
-        # Enviar um comando para o Arduino para ligar a luz
-        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
-        app.logger.info(f"Enviando solicitação para: {arduino_url}")
+@app.route('/dispositivo/tv/canal/<string:acao>', methods=['POST'])
+def mudar_canal(acao):
+    if acao not in ["mais", "menos"]:
+        return jsonify({"error": "Ação inválida"}), 400
 
-        response = requests.post(arduino_url, data={'comando':'ligar'})  # Usar data para enviar formulário
-
-        if response.status_code == 200:
-            return jsonify({'mensagem': 'Luz foi ligada'})
-        else:
-            return jsonify({'mensagem': 'Falha ao ligar a luz', 'status': response.status_code}), response.status_code
-    else:
-        return jsonify({'mensagem': 'Comando não especificado', 'status': 400}), 400
-
-
-@app.route('/dispositivo/luz/desligar', methods=['POST'])
-def desligar_luz():
-    comando = request.form.get('comando')  # Extrair o comando do formulário
+    endpoint = f"/tv/canal/{acao}"
+    response = requests.post(f'https://{ESP_IP_ADDRESS}{endpoint}')
     
-    app.logger.info(f"Comando recebido: {comando}")
+    return jsonify({"status": response.status_code, "mensagem": response.text})
 
-    if comando == 'desligar':
-        # Enviar um comando para o Arduino para desligar a luz
-        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/luz'  # Substitua com a URL correta do seu Arduino
-        app.logger.info(f"Enviando solicitação para: {arduino_url}")
+@app.route('/dispositivo/tv/mudo', methods=['POST'])
+def ativar_mudo():
+    response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/mudo')
+    return jsonify({"status": response.status_code, "mensagem": response.text})
 
-        response = requests.post(arduino_url, data={'comando':'desligar'})  # Usar data para enviar formulário
-
-        if response.status_code == 200:
-            return jsonify({'mensagem': 'Luz foi desligada'})
-        else:
-            return jsonify({'mensagem': 'Falha ao desligar a luz', 'status': response.status_code}), response.status_code
-    else:
-        return jsonify({'mensagem': 'Comando não especificado', 'status': 400}), 400
-
-#curl -X POST -d "comando=ligar" httpsss://0554-2804-828-c230-ef8c-e007-fb80-ce0d-9f45.ngrok-free.app/dispositivo/tomada/ligar
-@app.route('/dispositivo/tomada/ligar', methods=['POST'])
-def ligar_tomada():
-    comando = request.form.get('comando')  # Extrair o comando do formulário
+# Tratamento de erros para rotas inexistentes
+@app.errorhandler(404)
+def page_not_found(e):
+    return jsonify({"error": "Endpoint não encontrado"}), 404
     
-    app.logger.info(f"Comando recebido: {comando}")
-
-    if comando == 'ligar':
-        # Enviar um comando para o Arduino para ligar a tomada
-        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
-        app.logger.info(f"Enviando solicitação para: {arduino_url}")
-
-        response = requests.post(arduino_url, data={'comando':'ligar'})  # Usar data para enviar formulário
-
-        if response.status_code == 200:
-            return jsonify({'mensagem': 'Tomada foi ligada'})
-        else:
-            return jsonify({'mensagem': 'Falha ao ligar a tomada', 'status': response.status_code}), response.status_code
-    else:
-        return jsonify({'mensagem': 'Comando não especificado', 'status': 400}), 400
-
-@app.route('/dispositivo/tomada/desligar', methods=['POST'])
-def desligar_tomada():
-    comando = request.form.get('comando')  # Extrair o comando do formulário
-    
-    app.logger.info(f"Comando recebido: {comando}")
-
-    if comando == 'desligar':
-        # Enviar um comando para o Arduino para desligar a tomada
-        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
-        app.logger.info(f"Enviando solicitação para: {arduino_url}")
-
-        response = requests.post(arduino_url, data={'comando':'desligar'})  # Usar data para enviar formulário
-
-        if response.status_code == 200:
-            return jsonify({'mensagem': 'Tomada foi desligada'})
-        else:
-            return jsonify({'mensagem': 'Falha ao desligar a tomada', 'status': response.status_code}), response.status_code
-    else:
-        return jsonify({'mensagem': 'Comando não especificado', 'status': 400}), 400
-
+    return jsonify({"status": response.status_code, "mensagem": response.text})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

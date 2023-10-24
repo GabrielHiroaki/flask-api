@@ -61,6 +61,22 @@ cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+device_ip = ''
+
+@app.route('/update-ip', methods=['POST'])
+def update_ip():
+    global device_ip  # refere-se à variável global device_ip
+    data = request.get_json()  # obtém o corpo da requisição como JSON
+
+    if not data or 'ip' not in data:
+        # Se não houver dados, ou se 'ip' não estiver nos dados, retorna um erro.
+        return jsonify({'error': 'Bad Request', 'message': 'IP address is required'}), 400
+
+    device_ip = data['ip']  # atualiza o endereço IP armazenado
+
+    # Retorna uma resposta de sucesso com o novo endereço IP.
+    return jsonify({'success': True, 'message': 'IP address updated', 'new_ip': device_ip}), 200
+
 @app.route('/health_check', methods=['GET'])
 def health_check():
     """Endpoint de verificação de saúde da API."""

@@ -10,6 +10,11 @@ from functools import wraps
 import os
 import json
 
+
+ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
+if ESP_IP_ADDRESS is None:
+    raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
+
 # Constantes
 FIREBASE_CRED_PATH = {
     "type": os.environ.get("type"),
@@ -56,28 +61,6 @@ app.logger.setLevel(logging.INFO)
 cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-
-# Obtém o endereço IP do ambiente. Se não estiver disponível, você poderia configurar um valor padrão.
-device_ip = os.getenv('ESP_IP_ADDRESS', 'IP não definido') 
-
-@app.route('/ip', methods=['GET'])
-def get_ip():
-    # Simplesmente retorna o endereço IP que foi configurado no ambiente.
-    return jsonify({'ip_address': device_ip})
-
-@app.route('/update-ip', methods=['POST'])
-def update_ip():
-    global device_ip
-    data = request.get_json()
-
-    if not data or 'ip' not in data:
-        return jsonify({'error': 'Bad Request', 'message': 'IP address is required'}), 400
-
-    # Aqui estamos assumindo que você quer permitir a atualização do IP via requisição.
-    # Isso atualizará o endereço IP na variável, mas note que isso NÃO atualiza a variável de ambiente no sistema.
-    device_ip = data['ip']
-
-    return jsonify({'success': True, 'message': 'IP address updated', 'new_ip': device_ip}), 200
 
 @app.route('/health_check', methods=['GET'])
 def health_check():

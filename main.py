@@ -71,7 +71,7 @@ def health_check():
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
     try:
-        response = requests.get(f'httpsss://{ESP_IP_ADDRESS}/sensor')
+        response = requests.get(f'https://{ESP_IP_ADDRESS}/sensor')
         if response.status_code == 200:
             return jsonify(response.json()), 200
         else:
@@ -187,7 +187,7 @@ def ligar_tomada():
 
     if comando == 'ligar':
         # Enviar um comando para o Arduino para ligar a tomada
-        arduino_url = f'httpss://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'ligar'})  # Usar data para enviar formulário
@@ -207,7 +207,7 @@ def desligar_tomada():
 
     if comando == 'desligar':
         # Enviar um comando para o Arduino para desligar a tomada
-        arduino_url = f'httpss://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
+        arduino_url = f'https://{ESP_IP_ADDRESS}/acionar/tomada'  # Substitua com a URL correta do seu Arduino
         app.logger.info(f"Enviando solicitação para: {arduino_url}")
 
         response = requests.post(arduino_url, data={'comando':'desligar'})  # Usar data para enviar formulário

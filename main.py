@@ -10,7 +10,6 @@ from functools import wraps
 import os
 import json
 
-
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:
     raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")

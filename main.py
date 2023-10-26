@@ -140,12 +140,12 @@ def energia_tv():
     response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/energia')
     # Verifica se a solicitação foi bem-sucedida.
     if response.status_code == 200:
-        return jsonify({"status": response.status_code, "mensagem": response.text})
+        return jsonify({"status": response.status_code, "mensagem": response.text}), 200
     else:
         # Se a chamada para o Arduino falhou, retorne um código de status de erro.
         # Isso refletirá a falha de volta ao aplicativo.
-        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ligar/desligar a tv"}), 500)
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
+        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ligar/desligar a tv"}), 500)
         
 @app.route('/dispositivo/tv/volume/<acao>', methods=['POST'])
 def controlar_volume(acao):
@@ -185,8 +185,8 @@ def ativar_mudo():
     else:
         # Se a chamada para o Arduino falhou, retorne um código de status de erro.
         # Isso refletirá a falha de volta ao aplicativo.
-        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ativar o mudo"}), 500)
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
+        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ativar o mudo"}), 500)
         
 # Tratamento de erros para rotas inexistentes
 @app.errorhandler(404)

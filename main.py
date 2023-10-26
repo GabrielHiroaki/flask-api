@@ -114,7 +114,6 @@ def delete_device(userId, deviceId):
 
 @app.route('/airconditioner/<command>', methods=['POST'])
 def control_airconditioner(command):
-    print(f'[DEBUG] Received command: {command}')
     """Endpoint para controlar o ar-condicionado via ESP32."""
     try:
         if command == "on":
@@ -138,15 +137,19 @@ def control_airconditioner(command):
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():
-    response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/energia')
-    # Verifica se a solicitação foi bem-sucedida.
-    if response.status_code == 200:
-        return jsonify({"status": response.status_code, "mensagem": response.text})
-    else:
-        # Se a chamada para o Arduino falhou, retorne um código de status de erro.
-        # Isso refletirá a falha de volta ao aplicativo.
-        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ligar/desligar a tv"}), 500)
-
+    try:
+        response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/energia')
+        # Verifica se a solicitação foi bem-sucedida.
+        if response.status_code == 200:
+            return jsonify({"status": response.status_code, "mensagem": response.text})
+        else:
+            # Se a chamada para o Arduino falhou, retorne um código de status de erro.
+            # Isso refletirá a falha de volta ao aplicativo.
+            return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ligar/desligar a tv"}), 500)
+    except requests.RequestException as e:
+        logging.error(f'Erro ao enviar comando para o ESP32: {e}')
+        return jsonify({"error": str(e)}), 500
+        
 @app.route('/dispositivo/tv/volume/<string:acao>', methods=['POST'])
 def controlar_volume(acao):
     if acao not in ["mais", "menos"]:

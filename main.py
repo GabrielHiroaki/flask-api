@@ -137,7 +137,7 @@ def control_airconditioner(command):
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():
-    response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/energia')
+    response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/energia')
     # Verifica se a solicitação foi bem-sucedida.
     if response.status_code == 200:
         return jsonify({"status": response.status_code, "mensagem": response.text})
@@ -153,7 +153,7 @@ def controlar_volume(acao):
         return jsonify({"error": "Ação inválida"}), 400
         
     endpoint = f"/tv/volume/{acao}"
-    response = requests.post(f'https://{ESP_IP_ADDRESS}{endpoint}')
+    response = requests.get(f'https://{ESP_IP_ADDRESS}{endpoint}')
     
     if response.status_code == 200:
         return jsonify({"status": response.status_code, "mensagem": response.text})
@@ -167,7 +167,7 @@ def mudar_canal(acao):
         return jsonify({"error": "Ação inválida"}), 400
 
     endpoint = f"/tv/canal/{acao}"
-    response = requests.post(f'https://{ESP_IP_ADDRESS}{endpoint}')
+    response = requests.get(f'https://{ESP_IP_ADDRESS}{endpoint}')
     
     if response.status_code == 200:
         return jsonify({"status": response.status_code, "mensagem": response.text})
@@ -177,7 +177,7 @@ def mudar_canal(acao):
         
 @app.route('/dispositivo/tv/mudo', methods=['POST'])
 def ativar_mudo():
-    response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/mudo')
+    response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/mudo')
 
     # Verifica se a solicitação foi bem-sucedida.
     if response.status_code == 200:

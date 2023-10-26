@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
@@ -164,7 +164,14 @@ def mudar_canal(acao):
 @app.route('/dispositivo/tv/mudo', methods=['POST'])
 def ativar_mudo():
     response = requests.post(f'https://{ESP_IP_ADDRESS}/tv/mudo')
-    return jsonify({"status": response.status_code, "mensagem": response.text})
+
+    # Verifica se a solicitação foi bem-sucedida.
+    if response.status_code == 200:
+        return jsonify({"status": response.status_code, "mensagem": response.text})
+    else:
+        # Se a chamada para o Arduino falhou, retorne um código de status de erro.
+        # Isso refletirá a falha de volta ao aplicativo.
+        return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ativar o mudo"}), 500)
 
 # Tratamento de erros para rotas inexistentes
 @app.errorhandler(404)

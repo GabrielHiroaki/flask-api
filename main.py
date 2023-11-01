@@ -184,16 +184,16 @@ def schedule_air_conditioner():
         replace_existing=True
     )
 
-    logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'on' if turn_on else 'off'} às {time_to_trigger}")
+    logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'true' if turn_on else 'false'} às {time_to_trigger}")
     return jsonify({"message": "Scheduled successfully!"})
 
 
 def trigger_air_conditioner(turn_on):
-    action = "on" if turn_on else "off"
+    action = "true" if turn_on else "false"
     try:
-        if action == "on":
+        if action == "true":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
-        elif action == "off":
+        elif action == "false":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
 
         if response.status_code == 200:

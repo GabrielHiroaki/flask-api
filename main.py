@@ -193,11 +193,9 @@ def trigger_air_conditioner(turn_on):
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-            return jsonify({"error": "Failed to send command to ESP32."}), 500
 
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

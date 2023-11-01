@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+from pytz import utc
 import firebase_admin
+import time
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
 import requests
@@ -11,6 +13,10 @@ import sys
 from functools import wraps
 import os
 import json
+
+scheduler = BackgroundScheduler(timezone=utc)
+scheduler.start()
+print('Horário Servidor: ', time.tzname)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:

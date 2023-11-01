@@ -55,26 +55,8 @@ FIREBASE_CRED_PATH = {
 
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
-CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-
-
-# Função para remover códigos ANSI
-def strip_ansi_codes(s):
-    return re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', s)
-
-class ANSIFilteredStdout:
-    def __init__(self, original_stdout):
-        self.original_stdout = original_stdout
-
-    def write(self, text):
-        filtered_text = strip_ansi_codes(text)
-        self.original_stdout.write(filtered_text)
-
-    def flush(self):
-        self.original_stdout.flush()
-
-sys.stdout = ANSIFilteredStdout(sys.stdout)
+CORS(app)
 
 # Configuração de log
 logging.basicConfig(level=logging.INFO)

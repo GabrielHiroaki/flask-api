@@ -168,9 +168,9 @@ def trigger_air_conditioner(turn_on):
             response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
         elif action == "off":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
-    else:
-        logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-        return jsonify({"error": "Failed to send command to ESP32."}), 500
+        else:
+            logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
+            return jsonify({"error": "Failed to send command to ESP32."}), 500
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500

@@ -3,6 +3,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 import pytz
 import firebase_admin
+from firebase_admin import db
 import time
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
@@ -64,7 +65,10 @@ app.logger.setLevel(logging.INFO)
 
 # Inicializar Firebase
 cred = credentials.Certificate(FIREBASE_CRED_PATH)
-firebase_admin.initialize_app(cred)
+# firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://aplicativo-5310e-default-rtdb.firebaseio.com/'
+})
 db = firestore.client()
 
 @app.route('/health_check', methods=['GET'])
@@ -78,7 +82,13 @@ def get_sensor_data():
     try:
         response = requests.get(f'https://{ESP_IP_ADDRESS}/sensor')
         if response.status_code == 200:
-            return jsonify(response.json()), 200
+            data = response.json()
+
+            # Armazene os dados no Realtime Database
+            ref = db.reference('sensor_data')
+            ref.push(data)
+
+            return jsonify(data), 200
         else:
             logging.error(f"Erro ao buscar dados do sensor do ESP32. Código de status: {response.status_code}")
             return jsonify({"error": "Não foi possível buscar os dados do sensor do ESP32."}), 500

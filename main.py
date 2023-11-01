@@ -184,7 +184,7 @@ def schedule_air_conditioner():
         replace_existing=True
     )
 
-    logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
+    logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'on' if turn_on else 'off'} às {time_to_trigger}")
     return jsonify({"message": "Scheduled successfully!"})
 
 

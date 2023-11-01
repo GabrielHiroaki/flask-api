@@ -154,7 +154,7 @@ def control_airconditioner(command):
 @app.route('/schedule_air_conditioner', methods=['POST'])
 def schedule_air_conditioner():
     data = request.json
-    uid = data.get('uid')  # Supondo que você envie o UID na requisição
+    userId = data.get('userId')  # Supondo que você envie o UID na requisição
     turn_on = data.get('turnOn')
     time_to_trigger = data.get('time')  # deve ser uma string no formato "HH:MM"
 
@@ -173,7 +173,7 @@ def schedule_air_conditioner():
     }
 
     # Salvando agendamento específico para o usuário no Realtime Database
-    user_schedule_ref = ref.child(f'users/{uid}/air_conditioner_schedule')
+    user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule')
     user_schedule_ref.set(schedule_data)
 
     job = scheduler.add_job(

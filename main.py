@@ -155,29 +155,23 @@ def control_airconditioner(command):
 def schedule_air_conditioner():
     data = request.json
     turn_on = data.get('turnOn')
-    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM"
+    time_to_trigger = data.get('time')  # deve ser uma string no formato "HH:MM"
 
-    # Convertendo a string "HH:MM" para um objeto datetime
+    # Converta a string "HH:MM" em datetime
     dt = datetime.strptime(time_to_trigger, "%H:%M")
     hour, minute = dt.hour, dt.minute
-
-    # Obter o momento atual
     now = datetime.now()
-    
-    # Verifique se o horário agendado já passou para hoje
+
     if now.time() > dt.time():
-        # Se o horário agendado já passou, adicione um dia ao agendamento
         now = now + timedelta(days=1)
 
-    # Armazene o agendamento no Realtime Database
     schedule_data = {
         'turnOn': turn_on,
         'scheduledTime': time_to_trigger,
         'status': 'scheduled'
     }
-    ref.child('air_conditioner_schedule').set(schedule_data)  # Esta linha armazena os dados
+    ref.child('air_conditioner_schedule').set(schedule_data)
 
-    # Agenda a tarefa usando APScheduler
     job = scheduler.add_job(
         func=trigger_air_conditioner,
         trigger='date',
@@ -186,8 +180,7 @@ def schedule_air_conditioner():
         replace_existing=True
     )
 
-    logging.info(f"Agendado com sucesso o trabalho com ID: {job.id} para ligar o ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
-
+    logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
     return jsonify({"message": "Scheduled successfully!"})
 
 def trigger_air_conditioner(turn_on):

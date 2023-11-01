@@ -14,12 +14,12 @@ from functools import wraps
 import os
 import json
 
-# Configurar o fuso horário do servidor
-os.environ['TZ'] = 'UTC'  # Definindo para UTC, mas você pode alterar para 'America/Sao_Paulo' ou qualquer outro fuso horário se desejar.
+# Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul
+os.environ['TZ'] = 'America/Campo_Grande'
 time.tzset()
 
 # Inicializando o APScheduler com o fuso horário definido
-scheduler = BackgroundScheduler(timezone=pytz.utc)
+scheduler = BackgroundScheduler(timezone=pytz.timezone('America/Campo_Grande'))
 scheduler.start()
 
 # Imprimir o fuso horário do servidor
@@ -28,6 +28,10 @@ print('Horário Servidor: ', time.tzname)
 # Se desejar verificar o horário UTC atual
 utc_now = datetime.now(pytz.utc)
 print('Horário UTC atual: ', utc_now)
+
+# Se desejar verificar o horário atual em Campo Grande / Mato Grosso do Sul
+local_now = datetime.now(pytz.timezone('America/Campo_Grande'))
+print('Horário Campo Grande / Mato Grosso do Sul atual: ', local_now)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:

@@ -69,6 +69,7 @@ cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://aplicativo-5310e-default-rtdb.firebaseio.com/'
 })
+ref = db.reference()  # Referência para o Realtime Database
 db = firestore.client()
 
 @app.route('/health_check', methods=['GET'])

@@ -14,6 +14,7 @@ import sys
 from functools import wraps
 import os
 import json
+import uuid
 
 
 # Constantes

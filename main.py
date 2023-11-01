@@ -52,8 +52,6 @@ FIREBASE_CRED_PATH = {
 app = Flask(__name__)
 CORS(app)
 
-scheduler = BackgroundScheduler()
-scheduler.start()
 
 # Função para remover códigos ANSI
 def strip_ansi_codes(s):

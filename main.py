@@ -44,8 +44,10 @@ time.tzset()
 
 # Inicializando o APScheduler com o fuso horário definido
 scheduler = BackgroundScheduler(timezone=pytz.timezone('America/Campo_Grande'))
-scheduler.start()
-
+if not scheduler.running:
+    scheduler.start()
+    print("Scheduler iniciado!")
+    
 # Imprimir o fuso horário do servidor
 print('Horário Servidor: ', time.tzname)
 

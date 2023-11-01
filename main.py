@@ -16,6 +16,7 @@ import json
 
 scheduler = BackgroundScheduler(timezone=utc)
 scheduler.start()
+utc_now = datetime.now(pytz.utc)
 print('Horário Servidor: ', time.tzname)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  

@@ -193,15 +193,16 @@ def trigger_air_conditioner(turn_on):
 
         if response.status_code == 200:
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
-            
             # Enviar atualização para o cliente via WebSocket
             socketio.emit('air_conditioner_status', {'status': action})
-
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-
+            # Enviar mensagem de erro para o cliente via WebSocket
+            socketio.emit('error', f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
+        # Enviar mensagem de erro para o cliente via WebSocket
+        socketio.emit('error', f'Erro ao enviar comando para o ESP32: {e}')
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

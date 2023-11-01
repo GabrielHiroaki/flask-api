@@ -150,10 +150,11 @@ def control_airconditioner(command):
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500
-        
+
 @app.route('/schedule_air_conditioner', methods=['POST'])
 def schedule_air_conditioner():
     data = request.json
+    uid = data.get('uid')  # Obter o UID do usuário
     turn_on = data.get('turnOn')
     time_to_trigger = data.get('time')  # deve ser uma string no formato "HH:MM"
 
@@ -170,7 +171,10 @@ def schedule_air_conditioner():
         'scheduledTime': time_to_trigger,
         'status': 'scheduled'
     }
-    ref.child('air_conditioner_schedule').set(schedule_data)
+
+    # Use o UID para criar ou atualizar o agendamento específico do usuário
+    user_ref = ref.child(f'users/{uid}/air_conditioner_schedule')
+    user_ref.set(schedule_data)
 
     job = scheduler.add_job(
         func=trigger_air_conditioner,
@@ -182,6 +186,7 @@ def schedule_air_conditioner():
 
     logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
     return jsonify({"message": "Scheduled successfully!"})
+
 
 def trigger_air_conditioner(turn_on):
     action = "on" if turn_on else "off"

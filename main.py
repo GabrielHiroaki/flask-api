@@ -150,11 +150,19 @@ def schedule_air_conditioner():
     dt = datetime.strptime(time_to_trigger, "%H:%M")  # Este é o formato de 24 horas
     hour, minute = dt.hour, dt.minute
 
+    # Obter o momento atual
+    now = datetime.now()
+    
+    # Verifique se o horário agendado já passou para hoje
+    if now.time() > dt.time():
+        # Se o horário agendado já passou, adicione um dia ao agendamento
+        now = now + timedelta(days=1)
+
     # Agenda a tarefa usando APScheduler
     job = scheduler.add_job(
         func=trigger_air_conditioner,
         trigger='date',
-        run_date=datetime.now().replace(hour=hour, minute=minute),
+        run_date=now.replace(hour=hour, minute=minute),
         args=[turn_on],
         replace_existing=True
     )
@@ -162,6 +170,7 @@ def schedule_air_conditioner():
     logging.info(f"Agendado com sucesso o trabalho com ID: {job.id} para ligar o ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
 
     return jsonify({"message": "Scheduled successfully!"})
+
 
 def trigger_air_conditioner(turn_on):
     action = "on" if turn_on else "off"

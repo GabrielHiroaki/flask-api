@@ -189,11 +189,10 @@ def schedule_air_conditioner():
 
 
 def trigger_air_conditioner(turn_on):
-    action = "true" if turn_on else "false"
     try:
-        if action == "true":
+        if turn_on == "true":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
-        elif action == "false":
+        elif turn_on == "false":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
 
         if response.status_code == 200:

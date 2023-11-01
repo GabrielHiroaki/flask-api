@@ -32,6 +32,7 @@ FIREBASE_CRED_PATH = {
 
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul

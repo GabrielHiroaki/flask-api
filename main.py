@@ -167,9 +167,9 @@ def schedule_air_conditioner():
     # Convertendo a string "HH:MM" para um objeto datetime
     dt = datetime.strptime(time_to_trigger, "%H:%M")  # Este é o formato de 24 horas
     hour, minute = dt.hour, dt.minute
-    
+
     # Agenda a tarefa usando APScheduler
-    scheduler.add_job(
+    job = scheduler.add_job(
         func=trigger_air_conditioner,
         trigger='date',
         run_date=datetime.now().replace(hour=hour, minute=minute),
@@ -177,21 +177,24 @@ def schedule_air_conditioner():
         replace_existing=True
     )
 
+    logging.info(f"Agendado com sucesso o trabalho com ID: {job.id} para ligar o ar-condicionado: {'Sim' if turn_on else 'Não'} às {time_to_trigger}")
+
     return jsonify({"message": "Scheduled successfully!"})
 
 def trigger_air_conditioner(turn_on):
-    # Aqui você pode fazer uma chamada HTTP para ligar/desligar o ar-condicionado
-    # ou qualquer outra ação necessária.
-    # Exemplo:
     action = "on" if turn_on else "off"
     try:
-        if action == "on":
-            response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
+        if action== "on":
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
         elif action == "off":
-            response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
+
+        if response.status_code == 200:
+            logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
             return jsonify({"error": "Failed to send command to ESP32."}), 500
+
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500

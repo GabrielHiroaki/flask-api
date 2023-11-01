@@ -143,10 +143,10 @@ def control_airconditioner(command):
 def schedule_air_conditioner():
     data = request.json
     turn_on = data.get('turnOn')
-    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM AM/PM"
+    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM"
 
-    # Convertendo a string "HH:MM AM/PM" para um objeto datetime
-    dt = datetime.strptime(time_to_trigger, "%I:%M %p")  # Este é o formato de 12 horas com AM/PM
+    # Convertendo a string "HH:MM" para um objeto datetime
+    dt = datetime.strptime(time_to_trigger, "%H:%M")  # Este é o formato de 24 horas
     hour, minute = dt.hour, dt.minute
     
     # Agenda a tarefa usando APScheduler

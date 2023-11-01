@@ -162,8 +162,17 @@ def trigger_air_conditioner(turn_on):
     # ou qualquer outra ação necessária.
     # Exemplo:
     action = "on" if turn_on else "off"
-    response = requests.post(f"{urlAUX}/airconditioner/{action}")
-    # Aqui você pode adicionar logs ou outras ações dependendo da resposta
+    try:
+        if command == "on":
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
+        elif command == "off":
+            response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
+    else:
+        logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
+        return jsonify({"error": "Failed to send command to ESP32."}), 500
+    except requests.RequestException as e:
+        logging.error(f'Erro ao enviar comando para o ESP32: {e}')
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

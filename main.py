@@ -29,7 +29,10 @@ FIREBASE_CRED_PATH = {
     "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
     # Adicione outros campos se necessário
 }
-
+ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
+if ESP_IP_ADDRESS is None:
+    raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
+    
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
 CORS(app)
@@ -53,9 +56,6 @@ print('Horário UTC atual: ', utc_now)
 local_now = datetime.now(pytz.timezone('America/Campo_Grande'))
 print('Horário Campo Grande / Mato Grosso do Sul atual: ', local_now)
 
-ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
-if ESP_IP_ADDRESS is None:
-    raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
 # Configuração de log
 logging.basicConfig(level=logging.INFO)
 

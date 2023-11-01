@@ -15,6 +15,26 @@ from functools import wraps
 import os
 import json
 
+# Constantes
+FIREBASE_CRED_PATH = {
+    "type": os.environ.get("type"),
+    "project_id": os.environ.get("project_id"),
+    "private_key_id": os.environ.get("private_key_id"),
+    "private_key": os.environ.get("private_key").replace('\\n', '\n'),  # Para tratar quebras de linha na chave privada
+    "client_email": os.environ.get("client_email"),
+    "client_id": os.environ.get("client_id"),
+    "auth_uri": os.environ.get("auth_uri"),
+    "token_uri": os.environ.get("token_uri"),
+    "auth_provider_x509_cert_url": os.environ.get("auth_provider_x509_cert_url"),
+    "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
+    # Adicione outros campos se necessário
+}
+
+# Inicialize o aplicativo Flask
+app = Flask(__name__)
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 # Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul
 os.environ['TZ'] = 'America/Campo_Grande'
 time.tzset()
@@ -37,27 +57,6 @@ print('Horário Campo Grande / Mato Grosso do Sul atual: ', local_now)
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:
     raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
-
-# Constantes
-FIREBASE_CRED_PATH = {
-    "type": os.environ.get("type"),
-    "project_id": os.environ.get("project_id"),
-    "private_key_id": os.environ.get("private_key_id"),
-    "private_key": os.environ.get("private_key").replace('\\n', '\n'),  # Para tratar quebras de linha na chave privada
-    "client_email": os.environ.get("client_email"),
-    "client_id": os.environ.get("client_id"),
-    "auth_uri": os.environ.get("auth_uri"),
-    "token_uri": os.environ.get("token_uri"),
-    "auth_provider_x509_cert_url": os.environ.get("auth_provider_x509_cert_url"),
-    "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
-    # Adicione outros campos se necessário
-}
-
-# Inicialize o aplicativo Flask
-app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
-CORS(app)
-
 # Configuração de log
 logging.basicConfig(level=logging.INFO)
 

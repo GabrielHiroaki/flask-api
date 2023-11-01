@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, make_response
-from flask_socketio import SocketIO
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 import pytz
@@ -33,7 +32,6 @@ FIREBASE_CRED_PATH = {
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul
 os.environ['TZ'] = 'America/Campo_Grande'
@@ -174,16 +172,10 @@ def trigger_air_conditioner(turn_on):
 
         if response.status_code == 200:
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
-            # Enviar atualização para o cliente via WebSocket
-            socketio.emit('air_conditioner_status', {'status': action})
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-            # Enviar mensagem de erro para o cliente via WebSocket
-            socketio.emit('error', f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
-        # Enviar mensagem de erro para o cliente via WebSocket
-        socketio.emit('error', f'Erro ao enviar comando para o ESP32: {e}')
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():
@@ -246,4 +238,4 @@ def page_not_found(e):
     return jsonify({"status": response.status_code, "mensagem": response.text})
 
 if __name__ == '__main__':
-    socketio.run(app)
+    app.run(debug=True, host='0.0.0.0', port=5000)

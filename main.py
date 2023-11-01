@@ -14,10 +14,20 @@ from functools import wraps
 import os
 import json
 
-scheduler = BackgroundScheduler(timezone=utc)
+# Configurar o fuso horário do servidor
+os.environ['TZ'] = 'UTC'  # Definindo para UTC, mas você pode alterar para 'America/Sao_Paulo' ou qualquer outro fuso horário se desejar.
+time.tzset()
+
+# Inicializando o APScheduler com o fuso horário definido
+scheduler = BackgroundScheduler(timezone=pytz.utc)
 scheduler.start()
-utc_now = datetime.now(pytz.utc)
+
+# Imprimir o fuso horário do servidor
 print('Horário Servidor: ', time.tzname)
+
+# Se desejar verificar o horário UTC atual
+utc_now = datetime.now(pytz.utc)
+print('Horário UTC atual: ', utc_now)
 
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:

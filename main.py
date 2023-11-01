@@ -157,7 +157,8 @@ def schedule_air_conditioner():
     userId = data.get('userId')  # Supondo que você envie o UID na requisição
     turn_on = data.get('turnOn')
     time_to_trigger = data.get('time')  # deve ser uma string no formato "HH:MM"
-
+    scheduleId = str(uuid.uuid4())
+    
     # Converta a string "HH:MM" em datetime
     dt = datetime.strptime(time_to_trigger, "%H:%M")
     hour, minute = dt.hour, dt.minute
@@ -173,41 +174,38 @@ def schedule_air_conditioner():
     }
 
     # Salvando agendamento específico para o usuário no Realtime Database
-    user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule')
+    user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule/{scheduleId}')
     user_schedule_ref.set(schedule_data)
 
     job = scheduler.add_job(
         func=trigger_air_conditioner,
         trigger='date',
         run_date=now.replace(hour=hour, minute=minute),
-        args=[turn_on],
-        replace_existing=True
+        args=[userId, scheduleId, turn_on],
+        replace_existing=True  # Isso pode ser problemático se você deseja ter múltiplos agendamentos simultâneos
     )
 
     logging.info(f"Agendamento realizado com sucesso. ID: {job.id} - Ligar ar-condicionado: {'true' if turn_on else 'false'} às {time_to_trigger}")
     return jsonify({"message": "Scheduled successfully!"})
 
 
-def trigger_air_conditioner(turn_on):
+def trigger_air_conditioner(userId, scheduleId, turn_on):
     try:
-        if turn_on == "true":
-            response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
-        elif turn_on == "false":
-            response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
+        action = 'ligar' if turn_on == "true" else 'desligar'
+        response = requests.get(f"https://{ESP_IP_ADDRESS}/{action}")
 
         if response.status_code == 200:
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
             
             # Atualize o status no Realtime Database
-            ref.child('air_conditioner_schedule').update({'status': 'executed'})
+            ref.child(f'users/{userId}/air_conditioner_schedule/{scheduleId}').update({'status': 'executed'})
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-            # Atualize o status no Realtime Database para refletir o erro
-            ref.child('air_conditioner_schedule').update({'status': 'error'})
+            ref.child(f'users/{userId}/air_conditioner_schedule/{scheduleId}').update({'status': 'error'})
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
-        # Atualize o status no Realtime Database para refletir o erro
-        ref.child('air_conditioner_schedule').update({'status': 'error'})
+        ref.child(f'users/{userId}/air_conditioner_schedule/{scheduleId}').update({'status': 'error'})
+
 
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])

@@ -10,3 +10,4 @@ flask_cors==4.0.0
 APScheduler==3.10.4
 DateTime==5.2
 pytz==2023.3.post1
+Flask-SocketIO==5.3.6

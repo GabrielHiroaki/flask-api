@@ -191,6 +191,7 @@ def schedule_air_conditioner():
 
 
 def trigger_air_conditioner(userId, turn_on):
+    logging.info(f"Função trigger_air_conditioner chamada em: {datetime.now()}")
     try:
         action = 'ligar' if turn_on == "true" else 'desligar'
         response = requests.get(f"https://{ESP_IP_ADDRESS}/{action}")

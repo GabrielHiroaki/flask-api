@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, make_response
+from flask_socketio import SocketIO
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 import pytz
@@ -55,6 +56,7 @@ FIREBASE_CRED_PATH = {
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 # Função para remover códigos ANSI
@@ -184,13 +186,17 @@ def schedule_air_conditioner():
 def trigger_air_conditioner(turn_on):
     action = "on" if turn_on else "off"
     try:
-        if action== "on":
+        if action == "on":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/ligar")
         elif action == "off":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/desligar")
 
         if response.status_code == 200:
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
+            
+            # Enviar atualização para o cliente via WebSocket
+            socketio.emit('air_conditioner_status', {'status': action})
+
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
 
@@ -258,4 +264,4 @@ def page_not_found(e):
     return jsonify({"status": response.status_code, "mensagem": response.text})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app)

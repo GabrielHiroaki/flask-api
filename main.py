@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
-import datetime
+from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
@@ -143,15 +143,17 @@ def control_airconditioner(command):
 def schedule_air_conditioner():
     data = request.json
     turn_on = data.get('turnOn')
-    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM"
+    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM AM/PM"
 
-    hour, minute = map(int, time_to_trigger.split(":"))
+    # Convertendo a string "HH:MM AM/PM" para um objeto datetime
+    dt = datetime.strptime(time_to_trigger, "%I:%M %p")  # Este é o formato de 12 horas com AM/PM
+    hour, minute = dt.hour, dt.minute
     
     # Agenda a tarefa usando APScheduler
     scheduler.add_job(
         func=trigger_air_conditioner,
         trigger='date',
-        run_date=datetime.datetime.now().replace(hour=hour, minute=minute),
+        run_date=datetime.now().replace(hour=hour, minute=minute),
         args=[turn_on],
         replace_existing=True
     )

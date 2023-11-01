@@ -33,6 +33,9 @@ FIREBASE_CRED_PATH = {
 app = Flask(__name__)
 CORS(app)
 
+scheduler = BackgroundScheduler()
+scheduler.start()
+
 # Função para remover códigos ANSI
 def strip_ansi_codes(s):
     return re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', s)
@@ -133,6 +136,33 @@ def control_airconditioner(command):
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500
+        
+@app.route('/schedule_air_conditioner', methods=['POST'])
+def schedule_air_conditioner():
+    data = request.json
+    turn_on = data.get('turnOn')
+    time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM"
+
+    hour, minute = map(int, time_to_trigger.split(":"))
+    
+    # Agenda a tarefa usando APScheduler
+    scheduler.add_job(
+        func=trigger_air_conditioner,
+        trigger='date',
+        run_date=datetime.datetime.now().replace(hour=hour, minute=minute),
+        args=[turn_on],
+        replace_existing=True
+    )
+
+    return jsonify({"message": "Scheduled successfully!"})
+
+def trigger_air_conditioner(turn_on):
+    # Aqui você pode fazer uma chamada HTTP para ligar/desligar o ar-condicionado
+    # ou qualquer outra ação necessária.
+    # Exemplo:
+    action = "on" if turn_on else "off"
+    response = requests.post(f"{urlAUX}/airconditioner/{action}")
+    # Aqui você pode adicionar logs ou outras ações dependendo da resposta
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
@@ -163,9 +164,9 @@ def trigger_air_conditioner(turn_on):
     # Exemplo:
     action = "on" if turn_on else "off"
     try:
-        if command == "on":
+        if action == "on":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
-        elif command == "off":
+        elif action == "off":
             response = requests.get(f"https://{ESP_IP_ADDRESS}/airconditioner/{action}")
     else:
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")

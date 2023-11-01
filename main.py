@@ -157,7 +157,7 @@ def schedule_air_conditioner():
     time_to_trigger = data.get('time')  # isso deve ser uma string no formato "HH:MM"
 
     # Convertendo a string "HH:MM" para um objeto datetime
-    dt = datetime.strptime(time_to_trigger, "%H:%M")  # Este é o formato de 24 horas
+    dt = datetime.strptime(time_to_trigger, "%H:%M")
     hour, minute = dt.hour, dt.minute
 
     # Obter o momento atual
@@ -167,6 +167,14 @@ def schedule_air_conditioner():
     if now.time() > dt.time():
         # Se o horário agendado já passou, adicione um dia ao agendamento
         now = now + timedelta(days=1)
+
+    # Armazene o agendamento no Realtime Database
+    schedule_data = {
+        'turnOn': turn_on,
+        'scheduledTime': time_to_trigger,
+        'status': 'scheduled'
+    }
+    ref.child('air_conditioner_schedule').set(schedule_data)  # Esta linha armazena os dados
 
     # Agenda a tarefa usando APScheduler
     job = scheduler.add_job(
@@ -181,7 +189,6 @@ def schedule_air_conditioner():
 
     return jsonify({"message": "Scheduled successfully!"})
 
-
 def trigger_air_conditioner(turn_on):
     action = "on" if turn_on else "off"
     try:
@@ -192,10 +199,18 @@ def trigger_air_conditioner(turn_on):
 
         if response.status_code == 200:
             logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
+            
+            # Atualize o status no Realtime Database
+            ref.child('air_conditioner_schedule').update({'status': 'executed'})
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
+            # Atualize o status no Realtime Database para refletir o erro
+            ref.child('air_conditioner_schedule').update({'status': 'error'})
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
+        # Atualize o status no Realtime Database para refletir o erro
+        ref.child('air_conditioner_schedule').update({'status': 'error'})
+
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

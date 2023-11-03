@@ -81,15 +81,21 @@ def health_check():
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
     try:
+        # O endereço IP do ESP deve ser definido em algum lugar do seu código
         response = requests.get(f'https://{ESP_IP_ADDRESS}/sensor')
         if response.status_code == 200:
             data = response.json()
+            user_id = data.get('userId')  # Assumindo que o userId está nos dados do sensor
 
-             # Armazene os dados no Realtime Database
-            sensor_data_ref = realtime_db_ref.child('sensor_data')  # Corrigido para usar realtime_db_ref
-            sensor_data_ref.push(data)
+            if user_id:
+                # Armazene os dados no Realtime Database sob o userId específico
+                sensor_data_ref = realtime_db_ref.child('sensor_data').child(user_id)
+                sensor_data_ref.push(data)
+                return jsonify(data), 200
+            else:
+                logging.error("Nenhum userId encontrado nos dados do sensor.")
+                return jsonify({"error": "Nenhum userId encontrado nos dados do sensor."}), 400
 
-            return jsonify(data), 200
         else:
             logging.error(f"Erro ao buscar dados do sensor do ESP32. Código de status: {response.status_code}")
             return jsonify({"error": "Não foi possível buscar os dados do sensor do ESP32."}), 500

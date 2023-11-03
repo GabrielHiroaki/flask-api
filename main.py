@@ -15,7 +15,6 @@ from functools import wraps
 import os
 import json
 
-
 # Constantes
 FIREBASE_CRED_PATH = {
     "type": os.environ.get("type"),

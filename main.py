@@ -264,6 +264,30 @@ def ativar_mudo():
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
         return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ativar o mudo"}), 500)
         
+@app.route('/dispositivo/led/on', methods=['GET'])
+def turn_led_on():
+    try:
+        # Send request to the ESP to turn the LED on
+        response = requests.get(f'https://{ESP_IP_ADDRESS}/led/on')
+        if response.status_code == 200:
+            return jsonify({'status': 'success', 'message': 'LED turned on'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to turn on LED'}), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/dispositivo/led/off', methods=['GET'])
+def turn_led_off():
+    try:
+        # Send request to the ESP to turn the LED off
+        response = requests.get(f'https://{ESP_IP_ADDRESS}/led/off')
+        if response.status_code == 200:
+            return jsonify({'status': 'success', 'message': 'LED turned off'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to turn off LED'}), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+        
 # Tratamento de erros para rotas inexistentes
 @app.errorhandler(404)
 def page_not_found(e):

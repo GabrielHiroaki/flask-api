@@ -41,12 +41,6 @@ CORS(app)
 # Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul
 os.environ['TZ'] = 'America/Campo_Grande'
 time.tzset()
-
-# Inicializando o APScheduler com o fuso horário definido
-scheduler = BackgroundScheduler(timezone=pytz.timezone('America/Campo_Grande'))
-if not scheduler.running:
-    scheduler.start()
-    print("Scheduler iniciado!")
     
 # Imprimir o fuso horário do servidor
 print('Horário Servidor: ', time.tzname)
@@ -285,4 +279,8 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
+    scheduler = BackgroundScheduler(timezone=pytz.timezone('America/Campo_Grande'))
+    if not scheduler.running:
+        scheduler.start()
+        print("Scheduler iniciado!")
     app.run(debug=True, host='0.0.0.0', port=5000)

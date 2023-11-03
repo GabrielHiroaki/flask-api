@@ -209,15 +209,20 @@ def trigger_air_conditioner(userId, turn_on):
         logging.error(f'Error sending command to the ESP32: {e}')
         ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error'})
 
-# Adicione uma rota para verificar o status do agendamento (opcional)
-@app.route('/check_schedule/<userId>', methods=['GET'])
-def check_schedule(userId):
+@app.route('/airconditioner_state/<userId>', methods=['GET'])
+def get_airconditioner_state(userId):
+    """Endpoint para obter o estado atual do ar-condicionado."""
     try:
-        schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule').get()
-        return jsonify(schedule_ref), 200
+        # Usando o caminho fornecido com o UID dinâmico
+        state_ref = ref.child(f'users/{userId}/air_conditioner_schedule/turnOn')
+        state = state_ref.get()  # Pega o estado atual
+
+        # Retorna o estado
+        return jsonify({"turnOn": state})
+
     except Exception as e:
-        logging.error(f"Failed to get schedule: {e}")
-        return jsonify({"message": "Failed to get schedule."}), 500
+        return jsonify({"error": str(e)})
+
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

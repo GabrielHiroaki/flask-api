@@ -92,7 +92,7 @@ def get_sensor_data():
 
             # Aqui você deverá alterar a lógica para armazenar os dados separados por userId.
             # Por exemplo, criar um nó separado para cada usuário.
-            sensor_data_ref = realtime_db_ref.child('sensor_data').child(user_id)  # Use o userId no caminho
+            sensor_data_ref = realtime_db_ref.child('users').child(user_id)  # Use o userId no caminho
             sensor_data_ref.push(data)
 
             return jsonify(data), 200

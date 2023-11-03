@@ -211,21 +211,6 @@ def trigger_air_conditioner(userId, turn_on):
         ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
 
 
-@app.route('/airconditioner_state/<userId>', methods=['GET'])
-def get_airconditioner_state(userId):
-    """Endpoint para obter o estado atual do ar-condicionado."""
-    try:
-        # Usando o caminho fornecido com o UID dinâmico
-        state_ref = ref.child(f'users/{userId}/air_conditioner_schedule/turnOn')
-        state = state_ref.get()  # Pega o estado atual
-
-        # Retorna o estado
-        return jsonify({"turnOn": state})
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():
     response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/energia')

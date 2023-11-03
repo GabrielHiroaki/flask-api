@@ -76,7 +76,7 @@ firestore_db = firestore.client()
 def health_check():
     """Endpoint de verificação de saúde da API."""
     return jsonify({"Status": "API is up and running!"}), 200
-
+    
 @app.route('/sensor', methods=['GET'])
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
@@ -92,7 +92,7 @@ def get_sensor_data():
 
             # Aqui você deverá alterar a lógica para armazenar os dados separados por userId.
             # Por exemplo, criar um nó separado para cada usuário.
-            sensor_data_ref = realtime_db_ref.child('users').child(user_id)  # Use o userId no caminho
+            sensor_data_ref = realtime_db_ref.child(f'users/{userId}/sensor_stats')  # Use o userId no caminho
             sensor_data_ref.push(data)
 
             return jsonify(data), 200

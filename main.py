@@ -161,47 +161,50 @@ def schedule_air_conditioner():
     turn_on = data.get('turnOn')
     time_to_trigger = data.get('time')  # This should be a string in the format "HH:MM"
 
-    # Convert the "HH:MM" string to datetime
-    dt = datetime.strptime(time_to_trigger, "%H:%M")
-    hour, minute = dt.hour, dt.minute
-    now = datetime.now()
+    try:
+        # Convert the "HH:MM" string to datetime
+        dt = datetime.strptime(time_to_trigger, "%H:%M").time()
+        now = datetime.now()
 
-    if now.time() > dt.time():
-        now = now + timedelta(days=1)
+        # Se a hora agendada já passou, agendar para o próximo dia
+        run_date = datetime.now() if now.time() <= dt else now + timedelta(days=1)
+        run_date = run_date.replace(hour=dt.hour, minute=dt.minute, second=0, microsecond=0)
 
-    schedule_data = {
-        'turnOn': turn_on,
-        'scheduledTime': time_to_trigger,
-        'status': 'scheduled'
-    }
+        schedule_data = {
+            'turnOn': turn_on,
+            'scheduledTime': time_to_trigger,
+            'status': 'scheduled'
+        }
 
-    # Saving the specific schedule for the user in the Realtime Database
-    user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule')
-    user_schedule_ref.set(schedule_data)
+        # Salva o agendamento no Firebase
+        user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule')
+        user_schedule_ref.set(schedule_data)
 
-    job = scheduler.add_job(
-        func=trigger_air_conditioner,
-        trigger='date',
-        run_date=now.replace(hour=hour, minute=minute),
-        args=[userId, turn_on],
-        id=f"{userId}_ac_schedule",  # Use a combination of user ID and some identifier for the job ID
-        replace_existing=True
-    )
+        # Agendar a função de trigger
+        job = scheduler.add_job(
+            func=trigger_air_conditioner,
+            trigger='date',
+            run_date=run_date,
+            args=[userId, turn_on],
+            id=f"{userId}_ac_schedule",  # ID único
+            replace_existing=True
+        )
 
-    logging.info(f"Schedule created successfully. ID: {job.id} - Turn on air conditioning: {'true' if turn_on else 'false'} at {time_to_trigger}")
-    return jsonify({"message": "Scheduled successfully!"})
-
+        logging.info(f"Schedule created successfully. ID: {job.id} - Turn on: {turn_on} at {run_date}")
+        return jsonify({"message": "Scheduled successfully!"}), 200
+    except Exception as e:
+        logging.error(f"Failed to create schedule: {e}")
+        return jsonify({"message": "Failed to schedule."}), 500
 
 def trigger_air_conditioner(userId, turn_on):
-    logging.info(f"Função trigger_air_conditioner chamada em: {datetime.now()}")
+    logging.info(f"Trigger function called at: {datetime.now()}")
     try:
         action = 'ligar' if turn_on == "true" else 'desligar'
+        # Certifique-se de que o ESP_IP_ADDRESS está definido corretamente
         response = requests.get(f"https://{ESP_IP_ADDRESS}/{action}")
 
         if response.status_code == 200:
             logging.info(f"Command {action} sent successfully to the ESP32.")
-
-            # Update the status in the Realtime Database
             ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'executed'})
         else:
             logging.error(f"Error sending command to the ESP32. Status code: {response.status_code}")
@@ -209,6 +212,16 @@ def trigger_air_conditioner(userId, turn_on):
     except requests.RequestException as e:
         logging.error(f'Error sending command to the ESP32: {e}')
         ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error'})
+
+# Adicione uma rota para verificar o status do agendamento (opcional)
+@app.route('/check_schedule/<userId>', methods=['GET'])
+def check_schedule(userId):
+    try:
+        schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule').get()
+        return jsonify(schedule_ref), 200
+    except Exception as e:
+        logging.error(f"Failed to get schedule: {e}")
+        return jsonify({"message": "Failed to get schedule."}), 500
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():

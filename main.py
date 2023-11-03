@@ -82,7 +82,7 @@ def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
     userId = request.args.get('userId')  # Obtenha o userId da string de consulta
     
-    if not user_id:
+    if not userId:
         return jsonify({"error": "userId não fornecido."}), 400
 
     try:

@@ -204,10 +204,13 @@ def trigger_air_conditioner(userId, turn_on):
             ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'executed'})
         else:
             logging.error(f"Error sending command to the ESP32. Status code: {response.status_code}")
-            ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error'})
+            # Updating the 'turnOn' value to false if there's an error
+            ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
     except requests.RequestException as e:
         logging.error(f'Error sending command to the ESP32: {e}')
-        ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error'})
+        # Also updating the 'turnOn' value to false if there's an exception
+        ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
+
 
 @app.route('/airconditioner_state/<userId>', methods=['GET'])
 def get_airconditioner_state(userId):

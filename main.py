@@ -80,22 +80,22 @@ def health_check():
 @app.route('/sensor', methods=['GET'])
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
+    user_id = request.args.get('userId')  # Obtenha o userId da string de consulta
+    
+    if not user_id:
+        return jsonify({"error": "userId não fornecido."}), 400
+
     try:
-        # O endereço IP do ESP deve ser definido em algum lugar do seu código
         response = requests.get(f'https://{ESP_IP_ADDRESS}/sensor')
         if response.status_code == 200:
             data = response.json()
-            user_id = data.get('userId')  # Assumindo que o userId está nos dados do sensor
 
-            if user_id:
-                # Armazene os dados no Realtime Database sob o userId específico
-                sensor_data_ref = realtime_db_ref.child('sensor_data').child(user_id)
-                sensor_data_ref.push(data)
-                return jsonify(data), 200
-            else:
-                logging.error("Nenhum userId encontrado nos dados do sensor.")
-                return jsonify({"error": "Nenhum userId encontrado nos dados do sensor."}), 400
+            # Aqui você deverá alterar a lógica para armazenar os dados separados por userId.
+            # Por exemplo, criar um nó separado para cada usuário.
+            sensor_data_ref = realtime_db_ref.child('sensor_data').child(user_id)  # Use o userId no caminho
+            sensor_data_ref.push(data)
 
+            return jsonify(data), 200
         else:
             logging.error(f"Erro ao buscar dados do sensor do ESP32. Código de status: {response.status_code}")
             return jsonify({"error": "Não foi possível buscar os dados do sensor do ESP32."}), 500

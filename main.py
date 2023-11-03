@@ -80,7 +80,7 @@ def health_check():
 @app.route('/sensor', methods=['GET'])
 def get_sensor_data():
     """Endpoint para obter dados do sensor do ESP32."""
-    user_id = request.args.get('userId')  # Obtenha o userId da string de consulta
+    userId = request.args.get('userId')  # Obtenha o userId da string de consulta
     
     if not user_id:
         return jsonify({"error": "userId não fornecido."}), 400
@@ -93,7 +93,7 @@ def get_sensor_data():
             # Aqui você deverá alterar a lógica para armazenar os dados separados por userId.
             # Por exemplo, criar um nó separado para cada usuário.
             sensor_data_ref = realtime_db_ref.child(f'users/{userId}/sensor_stats')  # Use o userId no caminho
-            sensor_data_ref.push(data)
+            sensor_data_ref.set(data)
 
             return jsonify(data), 200
         else:

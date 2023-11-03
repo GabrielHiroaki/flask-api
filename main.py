@@ -66,8 +66,11 @@ cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://aplicativo-5310e-default-rtdb.firebaseio.com/'
 })
-ref = db.reference()  # Referência para o Realtime Database
-db = firestore.client()
+# Referência para o Realtime Database
+realtime_db_ref = db.reference()  
+
+# Cliente do Firestore
+firestore_db = firestore.client()
 
 @app.route('/health_check', methods=['GET'])
 def health_check():
@@ -82,9 +85,9 @@ def get_sensor_data():
         if response.status_code == 200:
             data = response.json()
 
-            # Armazene os dados no Realtime Database
-            ref = db.reference('sensor_data')
-            ref.push(data)
+             # Armazene os dados no Realtime Database
+            sensor_data_ref = realtime_db_ref.child('sensor_data')  # Corrigido para usar realtime_db_ref
+            sensor_data_ref.push(data)
 
             return jsonify(data), 200
         else:
@@ -101,7 +104,7 @@ def add_device(userId):
         device_data = request.get_json()
         if not device_data:
             raise ValueError("No device data provided")
-        user_devices_ref = db.collection('users').document(userId).collection('devices')
+        user_devices_ref = firestore_db.collection('users').document(userId).collection('devices')
         new_doc_tuple = user_devices_ref.add(device_data)
         doc_ref = new_doc_tuple[1]
         return jsonify({"success": "Device added successfully", "id": doc_ref.id}), 201
@@ -113,7 +116,7 @@ def add_device(userId):
 def delete_device(userId, deviceId):
     """Endpoint para excluir um dispositivo de um usuário."""
     try:
-        user_devices_ref = db.collection('users').document(userId).collection('devices')
+        user_devices_ref = firestore_db.collection('users').document(userId).collection('devices')
         device_ref = user_devices_ref.document(deviceId)
         device = device_ref.get()
         if device.exists:
@@ -172,7 +175,7 @@ def schedule_air_conditioner():
         }
 
         # Salva o agendamento no Firebase
-        user_schedule_ref = ref.child(f'users/{userId}/air_conditioner_schedule')
+        user_schedule_ref = realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule')
         user_schedule_ref.set(schedule_data)
 
         # Agendar a função de trigger
@@ -200,15 +203,15 @@ def trigger_air_conditioner(userId, turn_on):
 
         if response.status_code == 200:
             logging.info(f"Command {action} sent successfully to the ESP32.")
-            ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'executed'})
+            realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'executed'})
         else:
             logging.error(f"Error sending command to the ESP32. Status code: {response.status_code}")
             # Updating the 'turnOn' value to false if there's an error
-            ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
+            realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
     except requests.RequestException as e:
         logging.error(f'Error sending command to the ESP32: {e}')
         # Also updating the 'turnOn' value to false if there's an exception
-        ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
+        realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
 
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])

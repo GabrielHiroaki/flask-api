@@ -37,7 +37,7 @@ if ESP_IP_ADDRESS is None:
 # Inicialize o aplicativo Flask
 app = Flask(__name__)
 scheduler = BackgroundScheduler(timezone=pytz.timezone('America/Campo_Grande'))
-
+scheduler.start()
 CORS(app)
 
 # Configurar o fuso horário do servidor para Campo Grande / Mato Grosso do Sul
@@ -281,12 +281,5 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
-    try:
-        scheduler.start()
-        print("Scheduler iniciado!")
-        app.run(debug=False, host='0.0.0.0', port=5000)  # Considere executar sem debug se possível
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    finally:
-        # Encerra o agendador quando o aplicativo Flask é interrompido
-        scheduler.shutdown()
+    app.run(debug=False, host='0.0.0.0', port=5000)  # Considere executar sem debug se possível
+

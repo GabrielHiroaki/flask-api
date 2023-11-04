@@ -168,11 +168,14 @@ def schedule_air_conditioner():
     try:
         # Convert the "HH:MM" string to datetime
         dt = datetime.strptime(time_to_trigger, "%H:%M").time()
-        now = datetime.now(pytz.timezone('America/Campo_Grande'))
+        timezone = pytz.timezone('America/Campo_Grande')
+        now = datetime.now(timezone)
         
         # Se a hora agendada já passou, agendar para o próximo dia
-        run_date = datetime.now() if now.time() <= dt else now + timedelta(days=1)
-        run_date = run_date.replace(hour=dt.hour, minute=dt.minute, second=0, microsecond=0)
+        if now.time() <= dt:
+            run_date = timezone.localize(datetime.combine(now.date(), dt))
+        else:
+            run_date = timezone.localize(datetime.combine(now.date() + timedelta(days=1), dt))
 
         schedule_data = {
             'turnOn': turn_on,

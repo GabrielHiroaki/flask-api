@@ -75,7 +75,7 @@ firestore_db = firestore.client()
 @app.route('/health_check', methods=['GET'])
 def health_check():
     """Endpoint de verificação de saúde da API."""
-    return jsonify({"Status": "API is up and running!"}), 200
+    return jsonify({"Status": "API está ativa!"}), 200
     
 @app.route('/sensor', methods=['GET'])
 def get_sensor_data():
@@ -90,8 +90,6 @@ def get_sensor_data():
         if response.status_code == 200:
             data = response.json()
 
-            # Aqui você deverá alterar a lógica para armazenar os dados separados por userId.
-            # Por exemplo, criar um nó separado para cada usuário.
             sensor_data_ref = realtime_db_ref.child(f'users/{userId}/sensor_stats')  # Use o userId no caminho
             sensor_data_ref.set(data)
 
@@ -109,13 +107,13 @@ def add_device(userId):
     try:
         device_data = request.get_json()
         if not device_data:
-            raise ValueError("No device data provided")
+            raise ValueError("Nenhum dado do dispositivo fornecido!")
         user_devices_ref = firestore_db.collection('users').document(userId).collection('devices')
         new_doc_tuple = user_devices_ref.add(device_data)
         doc_ref = new_doc_tuple[1]
-        return jsonify({"success": "Device added successfully", "id": doc_ref.id}), 201
+        return jsonify({"success": "Dispositivo adicionado com sucesso!", "id": doc_ref.id}), 201
     except Exception as e:
-        logging.error(f"Error adding device for user {userId}: {e}")
+        logging.error(f"Erro ao adicionar o dispositivo para o usuário {userId}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/devices/<userId>/<deviceId>', methods=['DELETE'])
@@ -127,11 +125,11 @@ def delete_device(userId, deviceId):
         device = device_ref.get()
         if device.exists:
             device_ref.delete()
-            return jsonify({"message": "Device deleted successfully"}), 200
+            return jsonify({"message": "Dispositivo deletado com sucesso!"}), 200
         else:
-            return jsonify({"error": "Device not found"}), 404
+            return jsonify({"error": "Dispositivo não encontrado!"}), 404
     except Exception as e:
-        logging.error(f"Error deleting device for user {userId} and device ID {deviceId}: {e}")
+        logging.error(f"Erro ao deletar o dispositivo para o usuário {userId} e ID do dispositivo {deviceId}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/airconditioner/<command>', methods=['POST'])
@@ -146,13 +144,13 @@ def control_airconditioner(command):
             temperatura = command.replace("set_temperatura_", "")
             response = requests.get(f"https://{ESP_IP_ADDRESS}/temperatura/{temperatura}")
         else:
-            return jsonify({"error": "Command not recognized"}), 400
+            return jsonify({"error": "Comando não reconhecido!"}), 400
 
         if response.status_code == 200:
-            return jsonify({"success": f"Air conditioner command {command} executed successfully"}), 200
+            return jsonify({"success": f"Comando do ar condicionado {command} executado com sucesso!"}), 200
         else:
             logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-            return jsonify({"error": "Failed to send command to ESP32."}), 500
+            return jsonify({"error": "Falha ao enviar o comando para o ESP32!"}), 500
     except requests.RequestException as e:
         logging.error(f'Erro ao enviar comando para o ESP32: {e}')
         return jsonify({"error": str(e)}), 500
@@ -160,13 +158,14 @@ def control_airconditioner(command):
 
 @app.route('/schedule_air_conditioner', methods=['POST'])
 def schedule_air_conditioner():
+    """Endpoint para gerenciar o agendamento do ar-condicionado."""
     data = request.json
     userId = data.get('userId')
     turn_on = data.get('turnOn')
-    time_to_trigger = data.get('time')  # This should be a string in the format "HH:MM"
+    time_to_trigger = data.get('time')  # Pegando String no formato "HH:MM"
 
     try:
-        # Convert the "HH:MM" string to datetime
+        # Converta a string "HH:MM" em data e hora
         dt = datetime.strptime(time_to_trigger, "%H:%M").time()
         timezone = pytz.timezone('America/Campo_Grande')
         now = datetime.now(timezone)
@@ -197,48 +196,49 @@ def schedule_air_conditioner():
             replace_existing=True
         )
 
-        logging.info(f"Schedule created successfully. ID: {job.id} - Turn on: {turn_on} at {run_date}")
-        return jsonify({"message": "Scheduled successfully!"}), 200
+        logging.info(f"Agendamento criado com sucesso. ID: {job.id} - Ligar: {turn_on} em {run_date}")
+        return jsonify({"message": "Agendamento com sucesso!"}), 200
     except Exception as e:
-        logging.error(f"Failed to create schedule: {e}")
-        return jsonify({"message": "Failed to schedule."}), 500
+        logging.error(f"Falha ao criar o agendamento: {e}")
+        return jsonify({"message": "Falha ao efetuar o agendamento!"}), 500
 
 def trigger_air_conditioner(userId, turn_on):
-    logging.info(f"Trigger function called at: {datetime.now()}")
+    logging.info(f"Função de gatilho chamada em: {datetime.now()}")
     try:
         action = 'ligar' if turn_on == "true" else 'desligar'
-        # Certifique-se de que o ESP_IP_ADDRESS está definido corretamente
         response = requests.get(f"https://{ESP_IP_ADDRESS}/{action}")
 
         if response.status_code == 200:
-            logging.info(f"Command {action} sent successfully to the ESP32.")
+            logging.info(f"Comando {action} enviado com sucesso para o ESP32.")
             realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'executed'})
         else:
-            logging.error(f"Error sending command to the ESP32. Status code: {response.status_code}")
-            # Updating the 'turnOn' value to false if there's an error
+            logging.error(f"Erro ao enviar comando para o ESP32. Status code: {response.status_code}")
+            # Atualizando o valor 'turnOn' para false se houver um erro
             realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
     except requests.RequestException as e:
-        logging.error(f'Error sending command to the ESP32: {e}')
-        # Also updating the 'turnOn' value to false if there's an exception
+        logging.error(f'Erro ao enviar comando para o ESP32: {e}')
+        # Atualizando também o valor 'turnOn' para false se houver uma exceção
         realtime_db_ref.child(f'users/{userId}/air_conditioner_schedule').update({'status': 'error', 'turnOn': False})
 
 
 @app.route('/dispositivo/tv/energia', methods=['POST'])
 def energia_tv():
+    """Endpoint para ligar ou desligar a televisão."""
     response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/energia')
     # Verifica se a solicitação foi bem-sucedida.
     if response.status_code == 200:
         return jsonify({"status": response.status_code, "mensagem": response.text}), 200
     else:
-        # Se a chamada para o Arduino falhou, retorne um código de status de erro.
+        # Se a chamada para o ESP32 falhou, retorne um código de status de erro.
         # Isso refletirá a falha de volta ao aplicativo.
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
         return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ligar/desligar a tv"}), 500)
         
 @app.route('/dispositivo/tv/volume/<acao>', methods=['POST'])
 def controlar_volume(acao):
+    """Endpoint para alterar o volume da televisão."""
     if acao not in ["mais", "menos"]:
-        return jsonify({"error": "Ação inválida"}), 400
+        return jsonify({"error": "Ação inválida!"}), 400
         
     endpoint = f"/tv/volume/{acao}"
     response = requests.get(f'https://{ESP_IP_ADDRESS}{endpoint}')
@@ -247,10 +247,11 @@ def controlar_volume(acao):
         return jsonify({"status": response.status_code, "mensagem": response.text})
     else:
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-        return jsonify({"error": "Failed to send command to ESP32."}), 500
+        return jsonify({"error": "Falha ao enviar o comando para o ESP32!"}), 500
         
 @app.route('/dispositivo/tv/canal/<acao>', methods=['POST'])
 def mudar_canal(acao):
+    """Endpoint para alterar o canal da televisão."""
     if acao not in ["mais", "menos"]:
         return jsonify({"error": "Ação inválida"}), 400
 
@@ -261,25 +262,27 @@ def mudar_canal(acao):
         return jsonify({"status": response.status_code, "mensagem": response.text})
     else:
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
-        return jsonify({"error": "Failed to send command to ESP32."}), 500
+        return jsonify({"error": "Falha ao enviar o comando para o ESP32!"}), 500
         
 @app.route('/dispositivo/tv/mudo', methods=['POST'])
 def ativar_mudo():
+    """Endpoint para ativar ou desativar o áudio da televisão."""
     response = requests.get(f'https://{ESP_IP_ADDRESS}/tv/mudo')
 
     # Verifica se a solicitação foi bem-sucedida.
     if response.status_code == 200:
         return jsonify({"status": response.status_code, "mensagem": response.text})
     else:
-        # Se a chamada para o Arduino falhou, retorne um código de status de erro.
+        # Se a chamada para o ESP32 falhou, retorne um código de status de erro.
         # Isso refletirá a falha de volta ao aplicativo.
         logging.error(f"Erro ao enviar comando para o ESP32. Código de status: {response.status_code}")
         return make_response(jsonify({"status": response.status_code, "mensagem": "Não foi possível ativar o mudo"}), 500)
         
 @app.route('/dispositivo/led/on', methods=['GET'])
 def turn_led_on():
+    """Endpoint para ligar o LED."""
     try:
-        # Send request to the ESP to turn the LED on
+        # Enviar solicitação ao ESP para ligar o LED
         response = requests.get(f'https://{ESP_IP_ADDRESS}/led/on')
         if response.status_code == 200:
             return jsonify({'status': 'success', 'message': 'LED turned on'}), 200
@@ -290,8 +293,9 @@ def turn_led_on():
 
 @app.route('/dispositivo/led/off', methods=['GET'])
 def turn_led_off():
+    """Endpoint para desligar o LED."""
     try:
-        # Send request to the ESP to turn the LED off
+        # Enviar solicitação ao ESP para ligar o LED
         response = requests.get(f'https://{ESP_IP_ADDRESS}/led/off')
         if response.status_code == 200:
             return jsonify({'status': 'success', 'message': 'LED turned off'}), 200

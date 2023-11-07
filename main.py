@@ -396,7 +396,6 @@ def get_status():
     if response.status_code == 200:
         # armazenar dados do consumo da tomada no banco de dados
         data = response.json()
-        # Aqui estamos supondo que você já tem uma referência para o Firebase Realtime Database
         sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')
         sensor_data_ref.set(data.get('result'))  # Armazenar somente a parte 'result' da resposta
 

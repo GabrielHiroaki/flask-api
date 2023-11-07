@@ -368,8 +368,8 @@ def get_headers(client_id, secret, access_token, method, path, body):
 @app.route('/send_command', methods=['POST'])
 def send_command():
     global ACCESS_TOKEN  # Usa a variável global do token de acesso.
-    if not ACCESS_TOKEN:
-        get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    
     body = json.dumps(request.json)  # Converte o corpo da solicitação para uma string JSON.
     method = 'POST'  # Método HTTP para a solicitação.
     path = f'/v1.0/iot-03/devices/{DEVICE_ID}/commands'  # Caminho da URL para o comando.
@@ -386,8 +386,8 @@ def get_status():
         return jsonify({"error": "userId não fornecido."}), 400
         
     global ACCESS_TOKEN  # Usa a variável global do token de acesso.
-    if not ACCESS_TOKEN:
-        get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    
     method = 'GET'
     path = f'/v1.0/iot-03/devices/{DEVICE_ID}/status'
     headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, '')

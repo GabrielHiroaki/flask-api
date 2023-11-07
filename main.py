@@ -388,15 +388,23 @@ def get_status():
     global ACCESS_TOKEN  # Usa a variável global do token de acesso.
     if not ACCESS_TOKEN:
         get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
-    method = 'GET'  # Método HTTP para a solicitação.
-    path = f'/v1.0/iot-03/devices/{DEVICE_ID}/status'  # Caminho da URL para o status do dispositivo.
-    headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, '')  # Constrói os cabeçalhos para a solicitação.
-    status_url = TUYA_ENDPOINT.format(DEVICE_ID).replace('commands', 'status')  # Ajusta o endpoint para a solicitação de status.
-    response = requests.get(status_url, headers=headers)  # Envia a solicitação GET para a API da Tuya.
-    # armazenar dados do consumo da tomada no banco de dados
-    data = response.json()
-    sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')  # Use o userId no caminho
-    sensor_data_ref.set(data)
+    method = 'GET'
+    path = f'/v1.0/iot-03/devices/{DEVICE_ID}/status'
+    headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, '')
+    status_url = TUYA_ENDPOINT.format(DEVICE_ID).replace('commands', 'status')
+    response = requests.get(status_url, headers=headers)
+    if response.status_code == 200:
+        # armazenar dados do consumo da tomada no banco de dados
+        data = response.json()
+        # Aqui estamos supondo que você já tem uma referência para o Firebase Realtime Database
+        sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')
+        sensor_data_ref.set(data.get('result'))  # Armazenar somente a parte 'result' da resposta
+
+        return jsonify(data)  # Retorna a resposta como JSON.
+    else:
+        # Caso a resposta não seja bem-sucedida, você pode querer retornar o erro
+        return jsonify(response.json()), response.status_code
+
 
     return response.json()  # Retorna a resposta como JSON.
     

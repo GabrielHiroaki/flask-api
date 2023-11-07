@@ -381,6 +381,10 @@ def send_command():
 # Rota do Flask para lidar com solicitações de status do dispositivo.
 @app.route('/get_status', methods=['GET'])
 def get_status():
+    userId = request.args.get('userId')  # Obtenha o userId da string de consulta
+    if not userId:
+        return jsonify({"error": "userId não fornecido."}), 400
+        
     global ACCESS_TOKEN  # Usa a variável global do token de acesso.
     if not ACCESS_TOKEN:
         get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
@@ -389,6 +393,11 @@ def get_status():
     headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, '')  # Constrói os cabeçalhos para a solicitação.
     status_url = TUYA_ENDPOINT.format(DEVICE_ID).replace('commands', 'status')  # Ajusta o endpoint para a solicitação de status.
     response = requests.get(status_url, headers=headers)  # Envia a solicitação GET para a API da Tuya.
+    # armazenar dados do consumo da tomada no banco de dados
+    data = response.json()
+    sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')  # Use o userId no caminho
+    sensor_data_ref.set(data)
+
     return response.json()  # Retorna a resposta como JSON.
     
 # Tratamento de erros para rotas inexistentes

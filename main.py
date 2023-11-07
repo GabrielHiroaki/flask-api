@@ -85,12 +85,6 @@ realtime_db_ref = db.reference()
 # Cliente do Firestore
 firestore_db = firestore.client()
 
-# Funções auxiliares (com registros e tratamento de exceções)
-def log_error(message):
-    print(f"ERROR: {message}")
-
-def log_info(message):
-    print(f"INFO: {message}")
     
 @app.route('/health_check', methods=['GET'])
 def health_check():
@@ -347,12 +341,14 @@ def get_token():
         response_data = response.json()
         if response.status_code == 200 and response_data.get('success'):
             ACCESS_TOKEN = response_data['result']['access_token']
-            log_info("Token de acesso obtido com sucesso.")
+            logging.info("Token de acesso obtido com sucesso.")
         else:
-            raise ValueError(f"Falha ao obter token: {response_data.get('msg')}")
+            error_msg = f"Falha ao obter token: {response_data.get('msg')}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
     except Exception as e:
-        log_error(f"Exceção ao obter token de acesso: {e}")
-        raise e
+        logging.exception("Exceção ao obter token de acesso.")
+        raise
 
 # Função para criar a assinatura necessária para cada solicitação da API.
 def get_signature(client_id, secret, access_token, method, path, body, t, nonce):

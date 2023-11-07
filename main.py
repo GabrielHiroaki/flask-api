@@ -205,7 +205,7 @@ def schedule_air_conditioner():
 def trigger_air_conditioner(userId, turn_on):
     logging.info(f"Função de gatilho chamada em: {datetime.now()}")
     try:
-        action = 'ligar' if turn_on == "true" else 'desligar'
+        action = 'ligar' if str(turn_on).lower() == "true" else 'desligar'
         response = requests.get(f"https://{ESP_IP_ADDRESS}/{action}")
 
         if response.status_code == 200:

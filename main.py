@@ -394,15 +394,16 @@ def get_status():
     status_url = TUYA_ENDPOINT.format(DEVICE_ID).replace('commands', 'status')
     response = requests.get(status_url, headers=headers)
     if response.status_code == 200:
-        # armazenar dados do consumo da tomada no banco de dados
         data = response.json()
-        sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')
-        sensor_data_ref.set(data.get('result'))  # Armazenar somente a parte 'result' da resposta
-
-        return jsonify(data)  # Retorna a resposta como JSON.
-    else:
-        # Caso a resposta não seja bem-sucedida, você pode querer retornar o erro
-        return jsonify(response.json()), response.status_code
+        result = data.get('result')
+        if result is not None:
+            sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')
+            sensor_data_ref.set(result)  # Store only if result is not None
+            return jsonify(data)  # Return the full response as JSON
+        else:
+            # Handle the case where result is None
+            # Perhaps log this incident, or return a custom error message
+            return jsonify({"error": "No result data available."}), 500
 
 
     return response.json()  # Retorna a resposta como JSON.

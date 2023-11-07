@@ -5,6 +5,9 @@ import pytz
 import firebase_admin
 from firebase_admin import db
 import time
+import hashlib
+import hmac
+import uuid
 from firebase_admin import credentials, firestore, auth
 from flask_cors import CORS
 import requests
@@ -29,6 +32,16 @@ FIREBASE_CRED_PATH = {
     "client_x509_cert_url": os.environ.get("client_x509_cert_url"),
     # Adicione outros campos se necessário
 }
+
+# Configuração com suas credenciais da API da Tuya
+CLIENT_ID = '8gj9rsascg7aw7ptcynd'  # client_id fornecido pela Tuya.
+SECRET = 'ab3646cb7fb448b6a73f28e2140975ec'  # segredo fornecido pela Tuya.
+DEVICE_ID = '4530145050029107fb64'  # O ID do dispositivo que vamos controlar (tomada smart).
+TUYA_ENDPOINT = 'https://openapi.tuyaus.com/v1.0/iot-03/devices/{}/commands'  # Endpoint da API para enviar comandos para o dispositivo.
+
+# Variável global para armazenar o token de acesso (tomada smart).
+ACCESS_TOKEN = None
+
 ESP_IP_ADDRESS = os.getenv('ESP_IP_ADDRESS')  
 if ESP_IP_ADDRESS is None:
     raise ValueError("No ESP IP address set. Please set the ESP_IP_ADDRESS environment variable.")
@@ -304,6 +317,80 @@ def turn_led_off():
     except requests.exceptions.RequestException as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
         
+# Função para obter o token de acesso da API da Tuya.
+def get_token():
+    global ACCESS_TOKEN  # Usa a variável global para armazenar o token recebido.
+    method = 'GET'  # Método HTTP para a solicitação do token.
+    timestamp = str(int(time.time() * 1000))  # Timestamp em milissegundos.
+    sign_url = '/v1.0/token?grant_type=1'  # URL para solicitação de token.
+    content_hash = hashlib.sha256(''.encode('utf-8')).hexdigest()  # Hash SHA256 do corpo da solicitação (vazio neste caso).
+    string_to_sign = '\n'.join([method, content_hash, '', sign_url])  # Cria a string para assinar.
+    sign_str = CLIENT_ID + timestamp + string_to_sign  # Concatena as informações para a assinatura.
+    sign = hmac.new(SECRET.encode('utf-8'), sign_str.encode('utf-8'), hashlib.sha256).hexdigest().upper()  # Gera a assinatura HMAC SHA256.
+
+    headers = {
+        'client_id': CLIENT_ID,
+        'sign_method': 'HMAC-SHA256',
+        't': timestamp,
+        'sign': sign
+    }
+    response = requests.get(TUYA_ENDPOINT.replace('/v1.0/iot-03/devices/{}/commands', sign_url), headers=headers)  # Faz a solicitação HTTP GET para o endpoint.
+    response_data = response.json()  # Converte a resposta em JSON.
+    if response_data.get('success'):
+        ACCESS_TOKEN = response_data['result']['access_token']  # Armazena o token de acesso se a solicitação for bem-sucedida.
+    else:
+        raise ValueError("Failed to get token: {}".format(response_data.get('msg')))  # Levanta um erro se a solicitação falhar.
+
+# Função para criar a assinatura necessária para cada solicitação da API.
+def get_signature(client_id, secret, access_token, method, path, body, t, nonce):
+    content_sha256 = hashlib.sha256(body.encode('utf-8')).hexdigest() if body else hashlib.sha256(''.encode('utf-8')).hexdigest()  # Calcula o SHA256 do corpo da solicitação.
+    string_to_sign = f"{method}\n{content_sha256}\n\n{path}"  # Cria a string para assinar.
+    sign_str = f"{client_id}{access_token}{t}{nonce}{string_to_sign}"  # Concatena as informações com o token de acesso para a assinatura.
+    signature = hmac.new(secret.encode('utf-8'), sign_str.encode('utf-8'), hashlib.sha256).hexdigest().upper()  # Gera a assinatura HMAC SHA256.
+    return signature  # Retorna a assinatura.
+
+# Função para construir os cabeçalhos da solicitação com a assinatura incluída.
+def get_headers(client_id, secret, access_token, method, path, body):
+    t = str(int(time.time() * 1000))  # Gera o timestamp.
+    nonce = str(uuid.uuid4())  # Gera um UUID para o nonce.
+    sign = get_signature(client_id, secret, access_token, method, path, body, t, nonce)  # Obtém a assinatura.
+    return {
+        'client_id': client_id,
+        'sign_method': 'HMAC-SHA256',
+        't': t,
+        'nonce': nonce,
+        'sign': sign,
+        'access_token': access_token,
+        'Content-Type': 'application/json'
+    }
+
+# Rota do Flask para lidar com solicitações de envio de comando para o dispositivo.
+@app.route('/send_command', methods=['POST'])
+def send_command():
+    global ACCESS_TOKEN  # Usa a variável global do token de acesso.
+    if not ACCESS_TOKEN:
+        get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    body = json.dumps(request.json)  # Converte o corpo da solicitação para uma string JSON.
+    method = 'POST'  # Método HTTP para a solicitação.
+    path = f'/v1.0/iot-03/devices/{DEVICE_ID}/commands'  # Caminho da URL para o comando.
+    headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, body)  # Constrói os cabeçalhos para a solicitação.
+    response = requests.post(TUYA_ENDPOINT.format(DEVICE_ID), headers=headers, data=body)  # Envia a solicitação POST para a API da Tuya.
+    return response.json()  # Retorna a resposta como JSON.
+    
+    
+# Rota do Flask para lidar com solicitações de status do dispositivo.
+@app.route('/get_status', methods=['GET'])
+def get_status():
+    global ACCESS_TOKEN  # Usa a variável global do token de acesso.
+    if not ACCESS_TOKEN:
+        get_token()  # Obtém ou atualiza o token de acesso se ele ainda não foi definido.
+    method = 'GET'  # Método HTTP para a solicitação.
+    path = f'/v1.0/iot-03/devices/{DEVICE_ID}/status'  # Caminho da URL para o status do dispositivo.
+    headers = get_headers(CLIENT_ID, SECRET, ACCESS_TOKEN, method, path, '')  # Constrói os cabeçalhos para a solicitação.
+    status_url = TUYA_ENDPOINT.format(DEVICE_ID).replace('commands', 'status')  # Ajusta o endpoint para a solicitação de status.
+    response = requests.get(status_url, headers=headers)  # Envia a solicitação GET para a API da Tuya.
+    return response.json()  # Retorna a resposta como JSON.
+    
 # Tratamento de erros para rotas inexistentes
 @app.errorhandler(404)
 def page_not_found(e):

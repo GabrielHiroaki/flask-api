@@ -85,6 +85,13 @@ realtime_db_ref = db.reference()
 # Cliente do Firestore
 firestore_db = firestore.client()
 
+# Funções auxiliares (com registros e tratamento de exceções)
+def log_error(message):
+    print(f"ERROR: {message}")
+
+def log_info(message):
+    print(f"INFO: {message}")
+    
 @app.route('/health_check', methods=['GET'])
 def health_check():
     """Endpoint de verificação de saúde da API."""
@@ -319,27 +326,33 @@ def turn_led_off():
         
 # Função para obter o token de acesso da API da Tuya.
 def get_token():
-    global ACCESS_TOKEN  # Usa a variável global para armazenar o token recebido.
-    method = 'GET'  # Método HTTP para a solicitação do token.
-    timestamp = str(int(time.time() * 1000))  # Timestamp em milissegundos.
-    sign_url = '/v1.0/token?grant_type=1'  # URL para solicitação de token.
-    content_hash = hashlib.sha256(''.encode('utf-8')).hexdigest()  # Hash SHA256 do corpo da solicitação (vazio neste caso).
-    string_to_sign = '\n'.join([method, content_hash, '', sign_url])  # Cria a string para assinar.
-    sign_str = CLIENT_ID + timestamp + string_to_sign  # Concatena as informações para a assinatura.
-    sign = hmac.new(SECRET.encode('utf-8'), sign_str.encode('utf-8'), hashlib.sha256).hexdigest().upper()  # Gera a assinatura HMAC SHA256.
+    global ACCESS_TOKEN
+    try:
+        method = 'GET'
+        timestamp = str(int(time.time() * 1000))
+        sign_url = '/v1.0/token?grant_type=1'
+        content_hash = hashlib.sha256(''.encode('utf-8')).hexdigest()
+        string_to_sign = '\n'.join([method, content_hash, '', sign_url])
+        sign_str = CLIENT_ID + timestamp + string_to_sign
+        sign = hmac.new(SECRET.encode('utf-8'), sign_str.encode('utf-8'), hashlib.sha256).hexdigest().upper()
 
-    headers = {
-        'client_id': CLIENT_ID,
-        'sign_method': 'HMAC-SHA256',
-        't': timestamp,
-        'sign': sign
-    }
-    response = requests.get(TUYA_ENDPOINT.replace('/v1.0/iot-03/devices/{}/commands', sign_url), headers=headers)  # Faz a solicitação HTTP GET para o endpoint.
-    response_data = response.json()  # Converte a resposta em JSON.
-    if response_data.get('success'):
-        ACCESS_TOKEN = response_data['result']['access_token']  # Armazena o token de acesso se a solicitação for bem-sucedida.
-    else:
-        raise ValueError("Failed to get token: {}".format(response_data.get('msg')))  # Levanta um erro se a solicitação falhar.
+        headers = {
+            'client_id': CLIENT_ID,
+            'sign_method': 'HMAC-SHA256',
+            't': timestamp,
+            'sign': sign
+        }
+
+        response = requests.get(TUYA_ENDPOINT.replace('/v1.0/iot-03/devices/{}/commands', sign_url), headers=headers)
+        response_data = response.json()
+        if response.status_code == 200 and response_data.get('success'):
+            ACCESS_TOKEN = response_data['result']['access_token']
+            log_info("Token de acesso obtido com sucesso.")
+        else:
+            raise ValueError(f"Falha ao obter token: {response_data.get('msg')}")
+    except Exception as e:
+        log_error(f"Exceção ao obter token de acesso: {e}")
+        raise e
 
 # Função para criar a assinatura necessária para cada solicitação da API.
 def get_signature(client_id, secret, access_token, method, path, body, t, nonce):

@@ -407,12 +407,12 @@ def get_status():
         result = data.get('result')
         if result is not None:
             sensor_data_ref = realtime_db_ref.child(f'users/{userId}/outlet_stats')
-            sensor_data_ref.set(result)  # Store only if result is not None
-            return jsonify(data)  # Return the full response as JSON
+            sensor_data_ref.set(result)  # Armazene apenas se o resultado não for nenhum
+            return jsonify(data)  # Retorne a resposta completa como JSON
         else:
-            # Handle the case where result is None
-            # Perhaps log this incident, or return a custom error message
-            return jsonify({"error": "No result data available."}), 500
+            # Trata o caso onde o resultado é nenhum
+            # Registre este incidente ou retorne uma mensagem de erro personalizada
+            return jsonify({"error": "Nao a dados de resultados disponiveis."}), 500
 
 
     return response.json()  # Retorna a resposta como JSON.
